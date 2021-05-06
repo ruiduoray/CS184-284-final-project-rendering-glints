@@ -4,6 +4,8 @@
 #include "../constant_texture.h"
 #include "scene/checker_texture.h"
 #include "scene/image_texture.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "scene/stb/stb_image.h"
 
 #include <assert.h>
 #include <map>
@@ -13,6 +15,7 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <string.h>
 
 #include "pathtracer/bsdf.h"
 
@@ -924,15 +927,30 @@ void ColladaParser::parse_material ( XMLElement* xml, MaterialInfo& material ) {
       XMLElement* e_diffuse = get_element(tech_common, "phong/diffuse/color");
       if (e_diffuse) {
         Vector3D reflectance = spectrum_from_string(string(e_diffuse->GetText()));
-        int nx1 = 2048, ny1 = 2048;
-        int nn = 3;
-        // CImg<unsigned char> tex_data1("earth.jpeg");
+        int imageWidth, imageHeight, imageChannels;
+        unsigned char *tex_data1 = stbi_load("/Users/weililiu/Documents/MEng/CS284A/p3-1-pathtracer-sp21-wf/src/scene/earth.jpeg", &imageWidth, &imageHeight, &imageChannels, 0);
+        // int imageWidth1 = 1200, imageHeight1 = 600, imageChannels1 = 3;
+        int imageWidth1, imageHeight1, imageChannels1;
+        unsigned char *tex_data2 = stbi_load("/Users/weililiu/Documents/MEng/CS284A/p3-1-pathtracer-sp21-wf/src/scene/brick.jpeg", &imageWidth1, &imageHeight1, &imageChannels1, 0);
+        texture *t;
+        const char* material_id = material.id.c_str();
+        if (strcmp(material_id, "lambertian") == 0)
+          t = new image_texture(tex_data2, imageWidth1, imageHeight1);
+        else if (strcmp(material_id, "leftWall-material") == 0)
+          t = new image_texture(tex_data1, imageWidth1, imageHeight1);
+          // t = new constant_texture(Vector3D(.93, .79, .41));
+        else if (strcmp(material_id, "rightWall-material") == 0)
+          t = new checker_texture(
+            new constant_texture(Vector3D(.1, .1, .1)),
+            new constant_texture(Vector3D(.5, .5, .5)));
+        else
+          t = new constant_texture(Vector3D(.5f, .5f, .5f));
+        material.bsdf = new DiffuseBSDF(t);
+        std::cout << material.id.c_str() << std::endl;
+      } else {
         texture *t = new checker_texture(
           new constant_texture(Vector3D(0, 0, .5)),
           new constant_texture(Vector3D(.5, 0, 0)));
-        material.bsdf = new DiffuseBSDF(t);
-      } else {
-        texture *t = new constant_texture(Vector3D(.5f, .5f, .5f));
         material.bsdf = new DiffuseBSDF(t);
       }
     } else {

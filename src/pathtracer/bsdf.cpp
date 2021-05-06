@@ -54,7 +54,23 @@ Vector3D DiffuseBSDF::f(const Vector3D wo, const Vector3D wi, Vector3D hit_p) {
   // TODO (Part 3.1):
   // This function takes in both wo and wi and returns the evaluation of
   // the BSDF for those two directions.
-  Vector3D albedo = reflectance->value(0., 0., hit_p);
+  
+  // float phi = atan2(hit_p.z, hit_p.x);
+  // float theta = asin(hit_p.y);
+  // float u = 1 - (phi + M_PI) / (2 * M_PI);
+  // float v = (theta + M_PI / 2) / M_PI;
+
+  // UV mapping for spheres
+  Vector3D o = Vector3D(-0.4,0.3,-0.3);
+  Vector3D n = hit_p - o;
+  n.normalize();
+  float u = atan2(n.x, n.z) / (2*M_PI) + 0.5;
+  float v = n.y * 0.5 + 0.5;
+
+  // UV mapping for planes
+  
+
+  Vector3D albedo = reflectance->value(u, v, hit_p);
   return albedo / M_PI;
 
 }
